@@ -1,8 +1,6 @@
+login("admin","123456")
 t1 = streamTable(100:0,`Symbol`Date`Time`PRICE`SIZE`G127`CORR`COND`EX,[SYMBOL,DATE,SECOND,DOUBLE,INT,INT,INT,SYMBOL,CHAR])
 share t1 as trades
 
 //进入聚合引擎，订阅并进入聚合引擎，创建两个聚合引擎
-
-login("admin","123456")
-t2 = loadTable("dfs://TAQ","trades")
-schema(t2)
+trades = 

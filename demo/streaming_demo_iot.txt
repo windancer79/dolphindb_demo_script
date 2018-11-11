@@ -1,0 +1,4 @@
+//物联网案例，控制电流值一分钟均值不得超过1000mA
+t1 = streamTable(100:0,`hardwareId`sensorType`timestamp`value,[INT,SYMBOL,TIMESTAMP,DOUBLE])
+outputTable = table(100:0,`timestamp`hardwareId`avgVal,[TIMESTAMP,INT,DOUBLE])
+createStreamAggregator(60000,1000,<avg(value)>,t1,outputTable,`senserType`hardwareId)
