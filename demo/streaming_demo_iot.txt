@@ -1,4 +1,35 @@
+//1.simple streaming subscribe
+share streamTable(10000:0,`timestamp`hardwareId`electronicValue, [TIMESTAMP,INT,DOUBLE]) as sensorData
+t1 = streamTable(10000:0,`timestamp`hardwareId`avgVal, [TIMESTAMP,INT,DOUBLE])
+share t1 as localTable
+
+subscribeTable(,"sensorData","sub_sensor_data",,localTable)
+unsubscribeTable(,"sensorData","sub_sensor_data")
+
+select gmtime(timestamp), avgVal from localTable where timestamp>now()-5*60*1000
+//2.simple streaming subscribe with handler
+share streamTable(10000:0,`timestamp`hardwareId`electronicValue, [TIMESTAMP,INT,DOUBLE]) as sensorData
+t1 = streamTable(10000:0,`timestamp`hardwareId`avgVal, [TIMESTAMP,INT,DOUBLE])
+share t1 as localTable
+def myhandler(msg){
+	if(electronicValue>0.2)
+		localTable.append!(msg)
+}
+subscribeTable(,"sensorData","sub_sensor_data",,myhandler,true)
+unsubscribeTable(,"sensorData","sub_sensor_data")
 //物联网案例，控制电流值一分钟均值不得超过1000mA
-t1 = streamTable(100:0,`hardwareId`sensorType`timestamp`value,[INT,SYMBOL,TIMESTAMP,DOUBLE])
-outputTable = table(100:0,`timestamp`hardwareId`avgVal,[TIMESTAMP,INT,DOUBLE])
-createStreamAggregator(60000,1000,<avg(value)>,t1,outputTable,`senserType`hardwareId)
+share streamTable(10000:0,`timestamp`hardwareId`electronicValue, [TIMESTAMP,INT,DOUBLE]) as sensorData
+
+t1 = table(10000:0,`timestamp`hardwareId`avgVal, [TIMESTAMP,INT,DOUBLE])
+share t1 as outputTable
+iotAggregator = createStreamAggregator(60000,1000,<avg(electronicValue)>,sensorData,outputTable,`timestamp,false,`hardwareId)
+def dataCleaning(mutable aggregator,msg){
+	t = select * from msg where electronicValue>0.1
+	if(size(t)>0){
+		append!(aggregator,t)
+	}
+}
+subscribeTable(,"sensorData","sub_sensor_data",,append!{iotAggregator},true)
+
+unsubscribeTable(,"sensorData","sub_sensor_data")
+
